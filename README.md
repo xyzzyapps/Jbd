@@ -1,7 +1,7 @@
 README
 ======
 
-With JBD you try to build a MIDI inference engine on two A instruments and B and interact with the inference engine from your DAW.
+With JBD you try to build a MIDI inference engine between two instruments, say guitar and drums and interact with the inference engine from your DAW with the help of MIDI.
 
 Partially working. The current setup can send MIDI data to the ML sever and get some trained data back.
 Playback of the MIDI data doesn't work.
