@@ -6,6 +6,11 @@ With JBD you try to build a MIDI inference engine between two instruments, say g
 Partially working. The current setup can send MIDI data to the ML sever and get some trained data back.
 Playback of the MIDI data doesn't work.
 
+
+![Screenshot](https://github.com/xyzzyapps/Jbd/blob/main/Screenshot.png?raw=true)
+
+
+
 SETUP
 =====
 
