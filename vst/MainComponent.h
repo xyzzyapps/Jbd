@@ -11,6 +11,7 @@
 #include <stdexcept>
 #include <vector>
 #include <regex>
+#include <chaiscript/chaiscript.hpp>
 
 using std::cout;
 using std::cin;
@@ -22,13 +23,13 @@ using namespace std;
 std::vector<std::string> splitString(const std::string& str, std::string sep)
 {
     std::vector<std::string> tokens;
- 
+    
     std::stringstream ss(str);
     std::string token;
     while (std::getline(ss, token)) {
         tokens.push_back(token);
     }
- 
+    
     return tokens;
 }
 
@@ -173,7 +174,10 @@ public:
     : AudioProcessor (BusesProperties())
     {
 
+     
     }
+
+    
 
     ~MainContentComponent() override
     {
@@ -201,82 +205,82 @@ public:
 
         if (thePositionInfo.isPlaying) {
 
-        if ((currentPosition == loopStart) && !processedMidi.isEmpty()) {
-            midiLoopDone = true;
-            loopLength = loopEndTime - loopStart;
-            return;
-        }
+            if ((currentPosition == loopStart) && !processedMidi.isEmpty()) {
+                midiLoopDone = true;
+                loopLength = loopEndTime - loopStart;
+                return;
+            }
 
-        loopEndTime = currentPosition;
+            loopEndTime = currentPosition;
 
-        if (midiLoopDone == false) {
+            if (midiLoopDone == false) {
 
-            for (const auto metadata : midi)
-            {
-                
-                auto message = metadata.getMessage();
-                auto time = metadata.samplePosition;
-
-                if (message.isNoteOn())
+                for (const auto metadata : midi)
                 {
+                    
+                    auto message = metadata.getMessage();
+                    auto time = metadata.samplePosition;
 
-                    auto message2 = juce::MidiMessage::noteOn(message.getChannel(),
-                                                         message.getNoteNumber(),
-                                                         message.getVelocity());
-                    processedMidi.addEvent(message2, 0);
-                    noteTimeStamps.push_back(currentPosition - loopStart);
+                    if (message.isNoteOn())
+                    {
+
+                        auto message2 = juce::MidiMessage::noteOn(message.getChannel(),
+                           message.getNoteNumber(),
+                           message.getVelocity());
+                        processedMidi.addEvent(message2, 0);
+                        noteTimeStamps.push_back(currentPosition - loopStart);
+                    }
                 }
             }
         }
-        }
 
         if (dataInferred) {
- 
-             for (const auto metadata : inferMidi)  {
-                    inferProcessedMidi.clear();
-                    auto message = metadata.getMessage();
-                    auto time = metadata.samplePosition; 
+           
+           for (const auto metadata : inferMidi)  {
+               
+            auto message = metadata.getMessage();
+            auto time = metadata.samplePosition; 
 
-                    if (message.isNoteOn()) {
-                        auto message2 = juce::MidiMessage::noteOn(message.getChannel(),
-                                                             message.getNoteNumber(),
-                                                             message.getVelocity());
-                        message2.setTimeStamp(numSamples + message.getTimeStamp());
-                        inferProcessedMidi.addEvent(message2, numSamples + message.getTimeStamp());
-                    }
+            if (message.isNoteOn()) {
+                auto message2 = juce::MidiMessage::noteOn(message.getChannel(),
+                   message.getNoteNumber(),
+                   message.getVelocity());
+                message2.setTimeStamp(numSamples + message.getTimeStamp());
+                inferProcessedMidi.addEvent(message2, numSamples + message.getTimeStamp());
+            }
 
-                }
-
-
-           midi.swapWith (inferProcessedMidi);
         }
 
+
+        midi.swapWith (inferProcessedMidi);
     }
 
-    bool isMidiEffect() const override                           { return true; }
+}
 
-    juce::AudioProcessorEditor* createEditor() override          { return new PluginAudioProcessorEditor(*this); }
-    bool hasEditor() const override                              { return true; }
+bool isMidiEffect() const override                           { return true; }
 
-    const juce::String getName() const override                  { return "Jbd"; }
+juce::AudioProcessorEditor* createEditor() override          { return new PluginAudioProcessorEditor(*this); }
+bool hasEditor() const override                              { return true; }
 
-    bool acceptsMidi() const override                            { return true; }
-    bool producesMidi() const override                           { return true; }
-    double getTailLengthSeconds() const override                 { return 0; }
+const juce::String getName() const override                  { return "Jbd"; }
 
-    int getNumPrograms() override                                { return 1; }
-    int getCurrentProgram() override                             { return 0; }
-    void setCurrentProgram (int) override                        {}
-    const juce::String getProgramName (int) override             { return {}; }
-    void changeProgramName (int, const juce::String&) override   {}
+bool acceptsMidi() const override                            { return true; }
+bool producesMidi() const override                           { return true; }
+double getTailLengthSeconds() const override                 { return 0; }
 
-    void getStateInformation (juce::MemoryBlock& destData) override
-    {
-    }
+int getNumPrograms() override                                { return 1; }
+int getCurrentProgram() override                             { return 0; }
+void setCurrentProgram (int) override                        {}
+const juce::String getProgramName (int) override             { return {}; }
+void changeProgramName (int, const juce::String&) override   {}
 
-    void setStateInformation (const void* data, int sizeInBytes) override
-    {
-    }
+void getStateInformation (juce::MemoryBlock& destData) override
+{
+}
+
+void setStateInformation (const void* data, int sizeInBytes) override
+{
+}
 
 
 private:
@@ -295,18 +299,18 @@ private:
 
 
     class PluginAudioProcessorEditor : public juce::AudioProcessorEditor,
-                                       public juce::Button::Listener,
-                                       public juce::FilenameComponentListener,
-                                       private juce::Timer
+    public juce::Button::Listener,
+    public juce::FilenameComponentListener,
+    private juce::Timer
     {
-        public:
+    public:
 
         PluginAudioProcessorEditor(MainContentComponent& p)
-            : AudioProcessorEditor (&p), audioProcessor (p) 
-            {
+        : AudioProcessorEditor (&p), audioProcessor (p) 
+        {
 
 
-               fileComp.reset (new juce::FilenameComponent ("fileComp",
+         fileComp.reset (new juce::FilenameComponent ("fileComp",
                                                          {},                       // current file
                                                          false,                    // can edit file name,
                                                          false,                    // is directory,
@@ -314,62 +318,77 @@ private:
                                                          {},                       // browser wildcard suffix,
                                                          {},                       // enforced suffix,
                                                          "Select file to open"));  // text when nothing selected
-               addAndMakeVisible (fileComp.get());
+         addAndMakeVisible (fileComp.get());
 
-               fileComp->addListener (this);
+         fileComp->addListener (this);
 
-               textContent.reset (new juce::TextEditor());
-               addAndMakeVisible (textContent.get());
-               textContent->setMultiLine (true);
-               textContent->setReadOnly (true);
-               textContent->setCaretVisible (false);
+         textContent.reset (new juce::TextEditor());
+         addAndMakeVisible (textContent.get());
+         textContent->setMultiLine (true);
+         textContent->setReadOnly (true);
+         textContent->setCaretVisible (false);
 
-               addAndMakeVisible (inferButton);
-               inferButton.setButtonText ("Infer");
-               inferButton.addListener (this);
+         addAndMakeVisible (inferButton);
+         inferButton.setButtonText ("Infer");
+         inferButton.addListener (this);
 
-               addAndMakeVisible (resetButton);
-               resetButton.setButtonText ("Reset Loop");
-               resetButton.addListener (this);
+         addAndMakeVisible (resetButton);
+         resetButton.setButtonText ("Reset Loop");
+         resetButton.addListener (this);
 
+         addAndMakeVisible (testMidiGenerateButton);
+         testMidiGenerateButton.setButtonText ("Test Midi");
+         testMidiGenerateButton.addListener (this);
 
-                setSize (600, 400);
-                startTimer (400);
-        }
-
-        ~PluginAudioProcessorEditor() {
-        }
+         chai.add(chaiscript::fun(&PluginAudioProcessorEditor::testMidi), "testMidi");
 
 
-        void paint (juce::Graphics& g)
-        {
-            g.fillAll (juce::Colours::white);
-            g.setColour (juce::Colours::black);
-            g.setFont (15.0f);
-            g.drawFittedText ("Midi Volume", 0, 0, getWidth(), 30, juce::Justification::centred, 1);
-        }
+         setSize (600, 400);
+         startTimer (400);
+     }
 
-        void resized() override
-        {
-            fileComp.get()->setBounds (10, 10, getWidth() - 20, 20);
-            textContent.get()->setBounds (10, 40, getWidth() - 20, 120);
-            inferButton.setBounds (10, 180, getWidth() - 20, 20);
-            resetButton.setBounds (10, 200, getWidth() - 20, 20);
+     void testMidi() {
+        auto text = textContent->getText();
+        textContent->setText(text + "\nfrom chai");
 
-        }
+    }
+
+    ~PluginAudioProcessorEditor() {
+    }
 
 
-    private:
-        std::unique_ptr<juce::FilenameComponent> fileComp;
-        std::unique_ptr<juce::TextEditor> textContent;
-        juce::TextButton inferButton;
-        juce::TextButton resetButton;
+    void paint (juce::Graphics& g)
+    {
+        g.fillAll (juce::Colours::white);
+        g.setColour (juce::Colours::black);
+        g.setFont (15.0f);
+        g.drawFittedText ("Midi Volume", 0, 0, getWidth(), 30, juce::Justification::centred, 1);
+    }
 
-        MainContentComponent& audioProcessor;
-        
-        void timerCallback() override
-        {
-            if (audioProcessor.dataInferred != true) {
+    void resized() override
+    {
+        fileComp.get()->setBounds (10, 10, getWidth() - 20, 20);
+        textContent.get()->setBounds (10, 40, getWidth() - 20, 120);
+        inferButton.setBounds (10, 180, getWidth() - 20, 20);
+        resetButton.setBounds (10, 200, getWidth() - 20, 20);
+        testMidiGenerateButton.setBounds (10, 300, getWidth() - 20, 20);
+    }
+
+
+private:
+    std::unique_ptr<juce::FilenameComponent> fileComp;
+    std::unique_ptr<juce::TextEditor> textContent;
+    juce::TextButton inferButton;
+    juce::TextButton resetButton;
+    juce::TextButton testMidiGenerateButton;;
+
+    chaiscript::ChaiScript chai;
+
+    MainContentComponent& audioProcessor;
+    
+    void timerCallback() override
+    {
+        if (audioProcessor.dataInferred != true) {
 
             std::string text = "";
 
@@ -403,107 +422,112 @@ private:
 
             textContent->setText(text);
         }
-        }
+    }
 
 
-        void filenameComponentChanged (juce::FilenameComponent* fileComponentThatHasChanged)
-        {
-            if (fileComponentThatHasChanged == fileComp.get()) {
-                auto path = fileComp->getCurrentFile().getFullPathName().toStdString();
+    void filenameComponentChanged (juce::FilenameComponent* fileComponentThatHasChanged)
+    {
+        if (fileComponentThatHasChanged == fileComp.get()) {
+            auto path = fileComp->getCurrentFile().getFullPathName().toStdString();
             
-            }
         }
+    }
 
         void buttonClicked (juce::Button* button)   // [2]
         {
             if (button == &inferButton)                                                      // [3]
             {
-               RestRequest request;
-               request.header ("Content-Type", "application/json");
-               std::string text = "";
-               int counter=0;
-               juce::MidiMessage lastMessage;
+             RestRequest request;
+             request.header ("Content-Type", "application/json");
+             std::string text = "";
+             int counter=0;
+             juce::MidiMessage lastMessage;
 
-               for (const auto metadata : audioProcessor.processedMidi)  {
-                    auto message = metadata.getMessage();
-                    if (message.isNoteOn()) {
-                        lastMessage = message;
-                        const auto time = audioProcessor.noteTimeStamps[counter];
-                        text += std::to_string(message.getNoteNumber()) + ";" + std::to_string(time) + "\n";
-                        counter++;
-                    }
+             for (const auto metadata : audioProcessor.processedMidi)  {
+                auto message = metadata.getMessage();
+                if (message.isNoteOn()) {
+                    lastMessage = message;
+                    const auto time = audioProcessor.noteTimeStamps[counter];
+                    text += std::to_string(message.getNoteNumber()) + ";" + std::to_string(time) + "\n";
+                    counter++;
                 }
-
-                RestRequest::Response response = request.post("http://127.0.0.1:3000/infer")
-                        .field (juce::String("midi"), var(text))
-                        .field (juce::String("loopLength"), var(audioProcessor.loopLength))
-                        .execute();
-
-  
-                textContent->setText(response.bodyAsString);
-                auto lines  = splitString(response.bodyAsString.toStdString(), "\n");
-                
-                for (auto const &token: lines) {
-                    std::vector<std::string> notes;
-                    std::regex rgx(";");
-                    std::sregex_token_iterator iter(token.begin(),
-                        token.end(),
-                        rgx,
-                        -1);
-                    std::sregex_token_iterator end;
-                    for ( ; iter != end; ++iter)
-                        notes.push_back(*iter);
-
-                    int note = std::stoi(  notes[0] );
-                    float time = std::stof(  notes[1] );
-
-                    audioProcessor.inferredNoteTimeStamps.push_back(time);
-
-                    auto message = juce::MidiMessage::noteOn(lastMessage.getChannel(),
-                                                         note,
-                                                         lastMessage.getVelocity());
-
-                    message.setTimeStamp(time * audioProcessor.getSampleRate());
-                    audioProcessor.inferMidi.addEvent(message,time * audioProcessor.getSampleRate());
-
-
-                }
-                std::string mtext = "";                    
-                mtext += "new midi\n";
-                for (const auto metadata : audioProcessor.inferMidi)  {
-                    auto message = metadata.getMessage();
-                    auto time = metadata.samplePosition; 
-
-                    if (message.isNoteOn()) {
-                        mtext += std::to_string(message.getNoteNumber()) + "--" + std::to_string(time) + "\n";
-                    }
-
-                }
-
-                textContent->setText(mtext);
-
-                audioProcessor.dataInferred = true;
-                
             }
 
-            if (button == &resetButton)  {
-                audioProcessor.loopStart   = -1;
-                audioProcessor.loopEndTime   = -1;
-                audioProcessor.loopLength   = -1;
+            RestRequest::Response response = request.post("http://127.0.0.1:3000/infer")
+            .field (juce::String("midi"), var(text))
+            .field (juce::String("loopLength"), var(audioProcessor.loopLength))
+            .execute();
 
-                audioProcessor.midiLoopDone    = false;
-                audioProcessor.dataInferred = false;
-                audioProcessor.processedMidi.clear();
-                audioProcessor.inferMidi.clear();
+            
+            textContent->setText(response.bodyAsString);
+            auto lines  = splitString(response.bodyAsString.toStdString(), "\n");
+            
+            for (auto const &token: lines) {
+                std::vector<std::string> notes;
+                std::regex rgx(";");
+                std::sregex_token_iterator iter(token.begin(),
+                    token.end(),
+                    rgx,
+                    -1);
+                std::sregex_token_iterator end;
+                for ( ; iter != end; ++iter)
+                    notes.push_back(*iter);
 
-                textContent->setText("");
+                int note = std::stoi(  notes[0] );
+                float time = std::stof(  notes[1] );
 
-            }                                                     // [3]A  
+                audioProcessor.inferredNoteTimeStamps.push_back(time);
+
+                auto message = juce::MidiMessage::noteOn(lastMessage.getChannel(),
+                   note,
+                   lastMessage.getVelocity());
+
+                message.setTimeStamp(time * audioProcessor.getSampleRate());
+                audioProcessor.inferMidi.addEvent(message,time * audioProcessor.getSampleRate());
+
+
+            }
+            std::string mtext = "";                    
+            mtext += "new midi\n";
+            for (const auto metadata : audioProcessor.inferMidi)  {
+                auto message = metadata.getMessage();
+                auto time = metadata.samplePosition; 
+
+                if (message.isNoteOn()) {
+                    mtext += std::to_string(message.getNoteNumber()) + "--" + std::to_string(time) + "\n";
+                }
+
+            }
+
+            textContent->setText(mtext);
+
+            audioProcessor.dataInferred = true;
+            
+        }
+
+        if (button == &resetButton)  {
+            audioProcessor.loopStart   = -1;
+            audioProcessor.loopEndTime   = -1;
+            audioProcessor.loopLength   = -1;
+
+            audioProcessor.midiLoopDone    = false;
+            audioProcessor.dataInferred = false;
+            audioProcessor.processedMidi.clear();
+            audioProcessor.inferMidi.clear();
+
+            textContent->setText("");
 
         }
 
-        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PluginAudioProcessorEditor)
-    };
+        if (button == &testMidiGenerateButton)  {
+          chai.eval("testMidi();");
+      }
+
+
+  }
+
+  JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PluginAudioProcessorEditor)
+};
 
 
 

@@ -49,8 +49,9 @@ target_compile_definitions(Jbd
 
 # juce_add_binary_data(JbdData SOURCES ...)
 
-include_directories(include)
-link_directories(lib)
+include_directories(ChaiScript-6.1.0/include)
+# include_directories(include)
+# link_directories(lib)
 
 target_link_libraries(Jbd
     PRIVATE
@@ -73,25 +74,25 @@ target_link_libraries(Jbd
         juce::juce_recommended_warning_flags
             )
 
-target_link_libraries(Jbd
-PUBLIC
-        ${CMAKE_CURRENT_LIST_DIR}/lib/asmjit.lib
-        ${CMAKE_CURRENT_LIST_DIR}/lib/c10.lib
-        ${CMAKE_CURRENT_LIST_DIR}/lib/clog.lib
-        ${CMAKE_CURRENT_LIST_DIR}/lib/cpuinfo.lib
-        ${CMAKE_CURRENT_LIST_DIR}/lib/dnnl.lib
-        ${CMAKE_CURRENT_LIST_DIR}/lib/fbgemm.lib
-        ${CMAKE_CURRENT_LIST_DIR}/lib/fbjni.lib
-        ${CMAKE_CURRENT_LIST_DIR}/lib/kineto.lib
-        ${CMAKE_CURRENT_LIST_DIR}/lib/libprotobuf-lite.lib
-        ${CMAKE_CURRENT_LIST_DIR}/lib/libprotobuf.lib
-        ${CMAKE_CURRENT_LIST_DIR}/lib/libprotoc.lib
-        ${CMAKE_CURRENT_LIST_DIR}/lib/pthreadpool.lib
-        ${CMAKE_CURRENT_LIST_DIR}/lib/pytorch_jni.lib
-        ${CMAKE_CURRENT_LIST_DIR}/lib/torch.lib
-        ${CMAKE_CURRENT_LIST_DIR}/lib/torch_cpu.lib
-        ${CMAKE_CURRENT_LIST_DIR}/lib/XNNPACK.lib
-        )
+#target_link_libraries(Jbd
+# PUBLIC
+#        ${CMAKE_CURRENT_LIST_DIR}/lib/asmjit.lib
+#       ${CMAKE_CURRENT_LIST_DIR}/lib/c10.lib
+#       ${CMAKE_CURRENT_LIST_DIR}/lib/clog.lib
+#        ${CMAKE_CURRENT_LIST_DIR}/lib/cpuinfo.lib
+#        ${CMAKE_CURRENT_LIST_DIR}/lib/dnnl.lib
+#        ${CMAKE_CURRENT_LIST_DIR}/lib/fbgemm.lib
+#        ${CMAKE_CURRENT_LIST_DIR}/lib/fbjni.lib
+#        ${CMAKE_CURRENT_LIST_DIR}/lib/kineto.lib
+#        ${CMAKE_CURRENT_LIST_DIR}/lib/libprotobuf-lite.lib
+#        ${CMAKE_CURRENT_LIST_DIR}/lib/libprotobuf.lib
+#        ${CMAKE_CURRENT_LIST_DIR}/lib/libprotoc.lib
+#        ${CMAKE_CURRENT_LIST_DIR}/lib/pthreadpool.lib
+#        ${CMAKE_CURRENT_LIST_DIR}/lib/pytorch_jni.lib
+#        ${CMAKE_CURRENT_LIST_DIR}/lib/torch.lib
+#        ${CMAKE_CURRENT_LIST_DIR}/lib/torch_cpu.lib
+#        ${CMAKE_CURRENT_LIST_DIR}/lib/XNNPACK.lib
+#       )
 
 
 juce_generate_juce_header(Jbd)
