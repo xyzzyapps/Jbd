@@ -9,6 +9,7 @@ Playback of the MIDI data doesn't work.
 
 ![Screenshot](https://github.com/xyzzyapps/Jbd/blob/main/Screenshot.png?raw=true)
 
+Tested with Reaper
 
 
 SETUP
@@ -39,6 +40,5 @@ VST
 1. Create some MIDI data and loop over a region
 2. Click infer
 3. See the new MIDI data that is got from the server
-
 
 

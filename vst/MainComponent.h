@@ -177,14 +177,17 @@ public:
      
     }
 
-    
 
     ~MainContentComponent() override
     {
     }
 
-    void prepareToPlay (double sampleRate, int) override
+    void prepareToPlay	(double sampleRate,int maximumExpectedSamplesPerBlock)	 override
     {
+    }
+
+    long timeToSamples(double time) {
+        return long(time * getSampleRate());
     }
 
     void releaseResources() override {}
@@ -196,22 +199,38 @@ public:
         buffer.clear();
         
         AudioPlayHead::CurrentPositionInfo thePositionInfo;
-        getPlayHead()->getCurrentPosition(thePositionInfo);
+        juce::AudioPlayHead *playHead = getPlayHead();
+	
+		if (playHead == nullptr) return;
+
+        playHead->getCurrentPosition(thePositionInfo);
+
         auto currentPosition = thePositionInfo.timeInSeconds;              
-        if (loopStart == -1) {
-            loopStart = currentPosition;
-            return;
-        } 
 
-        if (thePositionInfo.isPlaying) {
 
-            if ((currentPosition == loopStart) && !processedMidi.isEmpty()) {
-                midiLoopDone = true;
-                loopLength = loopEndTime - loopStart;
+       if (thePositionInfo.isPlaying) {
+            sampleCount += numSamples;
+
+            if (loopStart == -1) {
+                loopStart = currentPosition;
                 return;
+            } 
+
+            if (currentPosition == loopStart) {
+                loopLength = loopEndTime - loopStart;
+                sampleCount = 0;
             }
 
             loopEndTime = currentPosition;
+
+       }    
+
+        if (thePositionInfo.isPlaying && !midiLoopDone) {
+
+            if ((currentPosition == loopStart) && !processedMidi.isEmpty()) {
+                midiLoopDone = true;
+                return;
+            }
 
             if (midiLoopDone == false) {
 
@@ -223,7 +242,6 @@ public:
 
                     if (message.isNoteOn())
                     {
-
                         auto message2 = juce::MidiMessage::noteOn(message.getChannel(),
                            message.getNoteNumber(),
                            message.getVelocity());
@@ -234,22 +252,39 @@ public:
             }
         }
 
-        if (dataInferred) {
+
+        if (!thePositionInfo.isPlaying) {
+            sampleCount = 0;
+        }
+        
+
+        if (thePositionInfo.isPlaying && dataInferred) {
            
+           bufferStartTime = sampleCount;
+           bufferEndTime = bufferStartTime + numSamples; 
+
            for (const auto metadata : inferMidi)  {
                
             auto message = metadata.getMessage();
-            auto time = metadata.samplePosition; 
+            auto time = metadata.samplePosition;
 
-            if (message.isNoteOn()) {
-                auto message2 = juce::MidiMessage::noteOn(message.getChannel(),
-                   message.getNoteNumber(),
-                   message.getVelocity());
-                message2.setTimeStamp(numSamples + message.getTimeStamp());
-                inferProcessedMidi.addEvent(message2, numSamples + message.getTimeStamp());
+            if ((bufferStartTime <= time) && (time <= bufferEndTime)) {
+
+                uint8 vol = 56;
+                if (message.isNoteOn()) {
+                    auto message2 = juce::MidiMessage::noteOn(
+                        message.getChannel(),
+                        message.getNoteNumber(),
+                        vol
+                    );
+                    message2.setTimeStamp(message.getTimeStamp());
+                    inferProcessedMidi.addEvent(message2, message.getTimeStamp());
+                }
+
+    
             }
 
-        }
+       }
 
 
         midi.swapWith (inferProcessedMidi);
@@ -296,6 +331,9 @@ private:
     std::vector <float> noteTimeStamps;
     std::vector <float> inferredNoteTimeStamps;
     bool midiLoopDone = false;
+    long sampleCount = 0;
+    long bufferStartTime = 0;
+    long bufferEndTime = 0;
 
 
     class PluginAudioProcessorEditor : public juce::AudioProcessorEditor,
@@ -393,6 +431,7 @@ private:
             std::string text = "";
 
             if (audioProcessor.midiLoopDone == true) {
+                text += "Sample Count ..." + std::to_string(audioProcessor.sampleCount) + "\n";
                 text += "loop End ..." + std::to_string(audioProcessor.loopEndTime) + "\n";
                 text += "loop length ..." + std::to_string(audioProcessor.loopLength) + "\n";
                 text += "midi\n";
@@ -408,6 +447,7 @@ private:
                 AudioPlayHead::CurrentPositionInfo thePositionInfo;
                 audioProcessor.getPlayHead()->getCurrentPosition(thePositionInfo); 
                 auto currentPosition = thePositionInfo.timeInSeconds;              
+                text += "Sample Count ..." + std::to_string(audioProcessor.sampleCount) + "\n";
                 text += "processing ..." + std::to_string(currentPosition) + "\n";
                 text += "loop start ..." + std::to_string(audioProcessor.loopStart) + "\n";
                 
@@ -421,7 +461,26 @@ private:
             }
 
             textContent->setText(text);
+        } else { 
+            auto text = textContent->getText().toStdString();
+            text += std::to_string(audioProcessor.bufferStartTime) + "--" + std::to_string(audioProcessor.bufferEndTime) + "\n";
+            textContent->setText(text);
+
+
+            /*
+            std::string text = "";
+
+           for (const auto metadata : audioProcessor.inferProcessedMidi)  {
+                auto message = metadata.getMessage();
+                auto time = metadata.samplePosition;
+                text += std::to_string(message.getNoteNumber()) + "--" + std::to_string(time) + "\n";
+            }
+            textContent->setText(text);
+            */
         }
+
+
+
     }
 
 

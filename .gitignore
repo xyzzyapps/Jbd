@@ -64,3 +64,5 @@ extras/Projucer/JUCECompileEngine.dylib
 .vscode
 /build
 
+vst/JUCE
+vst/Chai*
